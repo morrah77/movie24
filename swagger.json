@@ -1,0 +1,510 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Movie REST service",
+    "description": "Provides REST API for CRUD operations on movie entities",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "0.0.1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}/movie/v{api-version}",
+      "description": "Local server",
+      "variables": {
+        "port": {
+          "enum": ["3000", "8080"],
+          "default": "3000"
+        },
+        "api-version": {
+          "default": "0"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/movies": {
+      "get": {
+        "operationId": "movies_get",
+        "summary": "Get movie list",
+        "tags": [
+          "movieList"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "description": "Page length",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "order_by",
+            "description": "Field name for sorting",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["id", "name", "release_date"]
+            }
+          },
+          {
+            "name": "order",
+            "description": "Sorting order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          }
+        ],
+        "description": "Return paginated and sorted movie list",
+        "responses": {
+          "200": {
+            "description": "A page of movie list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ListPage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MovieList"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/ResponseErrorNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "movies_create",
+        "summary": "Bulk movie list creation",
+        "tags": [
+          "movieBulkOperations"
+        ],
+        "description": "Bulk movie creation",
+        "x-codegen-request-body-name": "new_movie_list",
+        "requestBody": {
+          "description": "List of movies to be created",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NewMovie"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ResponseOperationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponseErrorBadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "movies_update",
+        "summary": "Bulk movie list update",
+        "tags": [
+          "movieBulkOperations"
+        ],
+        "description": "Bulk movie update by deltas",
+        "x-codegen-request-body-name": "update_movie_list",
+        "requestBody": {
+          "description": "List of movie deltas to be updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MovieDelta"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ResponseOperationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponseErrorBadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "movies_delete",
+        "summary": "Bulk movie list deletion",
+        "tags": [
+          "movieBulkOperations"
+        ],
+        "description": "Bulk movie deletion by IDs",
+        "requestBody": {
+          "description": "List of movie ID to be deleted",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ResponseOperationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponseErrorBadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      }
+    },
+    "/movie/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "description": "Movie ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "get_movie",
+        "summary": "Get movie by ID",
+        "tags": [
+          "movie"
+        ],
+        "description": "Return movie by ID",
+        "responses": {
+          "200": {
+            "description": "A movie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Movie"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/ResponseErrorNotFound"
+          }
+        }
+      },
+      "put": {
+        "operationId": "replace_movie",
+        "summary": "Update movie by ID",
+        "tags": [
+          "movie"
+        ],
+        "description": "Update movie by ID with the delta",
+        "requestBody": {
+          "description": "Movie delta to be updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovieDelta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated movie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Movie"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponseErrorBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ResponseErrorNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_movie",
+        "summary": "Delete movie by ID",
+        "tags": [
+          "movie"
+        ],
+        "description": "Delete movie by ID",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ResponseOperationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponseErrorBadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/ResponseErrorNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ResponseErrorInternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ListPage": {
+        "type": "object",
+        "description": "Response object with entity list",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "Entity list",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "MovieList": {
+        "type": "object",
+        "description": "Movie list",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "Movie list",
+            "items": {
+              "$ref": "#/components/schemas/Movie"
+            }
+          }
+        }
+      },
+      "Movie": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MovieBasic"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID"
+              }
+            }
+          }
+        ],
+        "required": [
+          "id",
+          "title",
+          "description",
+          "short_description",
+          "duration",
+          "release_date",
+          "images",
+          "genres"
+        ]
+      },
+      "MovieDelta": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MovieBasic"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID"
+              }
+            }
+          }
+        ],
+        "required": [
+          "id"
+        ]
+      },
+      "NewMovie": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MovieBasic"
+          }
+        ],
+        "required": [
+          "title",
+          "description",
+          "short_description",
+          "duration",
+          "release_date",
+          "images",
+          "genres"
+        ]
+      },
+      "MovieBasic": {
+        "type": "object",
+        "description": "Basic Movie model",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description"
+          },
+          "short_description": {
+            "type": "string",
+            "description": "Short escription"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Duration in seconds",
+            "format": "double"
+          },
+          "release_date": {
+            "type": "string",
+            "description": "Release date",
+            "format": "date-time"
+          },
+          "images": {
+            "$ref": "#/components/schemas/Images"
+          },
+          "genres": {
+            "type": "array",
+            "description": "Genre list",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Images": {
+        "type": "object",
+        "description": "Movie image URLs",
+        "properties": {
+          "cover": {
+            "type": "string",
+            "description": "Cover image"
+          },
+          "poster": {
+            "type": "string",
+            "description": "Poster mage"
+          }
+        }
+      },
+      "ServiceResponse": {
+        "type": "object",
+        "description": "Common service response",
+        "properties": {
+          "status": {
+            "type": "number",
+            "description": "HTTP statuus"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      }
+    },
+    "responses": {
+      "ResponseOperationSucceeded": {
+        "description": "An 'operation succeeded' response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceResponse"
+            }
+          }
+        }
+      },
+      "ResponseErrorNotFound": {
+        "description": "An 'object not found' response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceResponse"
+            }
+          }
+        }
+      },
+      "ResponseErrorBadRequest": {
+        "description": "A 'bad request' response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceResponse"
+            }
+          }
+        }
+      },
+      "ResponseErrorInternalServerError": {
+        "description": "An 'internal server error' response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "movieList"
+    },
+    {
+      "name": "movie"
+    },
+    {
+      "name": "movieBulkOperations"
+    }
+  ]
+}
