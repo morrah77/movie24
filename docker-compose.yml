@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  movie-server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: movie-server
+    ports:
+      - $PORT:3000 #8080
+    environment:
+      - PORT=$PORT #8080
+      - NODE_ENV=$NODE_ENV #dev
+      - CONFIG_PATH=$CONFIG_PATH #./env/dev.config.json
+    volumes:
+      - $APP_CONFIG_VOLUME/$NODE_ENV.config.json:/app/env/$NODE_ENV.config.json
+
+  movie-server-postgres:
+    image: postgres:10
+    command: "postgres config_file=/etc/postgresql/postgresql.conf"
+    volumes:
+      - $POSTGRES_VOLUME/data:/var/lib/postgresql/data
+      - $POSTGRES_VOLUME/conf/postgresql.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - 5432:5432
+
+  movie-server-client:
+    image: postgres:10
+      command: "psql"
+
+  movie-server-redis:
+    image: redis:6.0.6
+    command: "redis-server --appendonly yes"
+    volumes:
+      - $REDIS_VOLUME/data:/data
+      - $REDIS_VOLUME/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+
+networks:
+  movie-server
+
+volumes:
+  config:
