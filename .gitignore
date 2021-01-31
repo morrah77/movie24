@@ -1,0 +1,8 @@
+.idea
+*.iml
+node_modules
+extra
+build
+spec/**/*.js
+docker/postgres/data
+dockerredis/data
