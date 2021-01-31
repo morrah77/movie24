@@ -1,0 +1,15 @@
+{
+  "pg": {
+    "user": "movie_user",
+    "database": "movie",
+    "password": "123456",
+    "port": 5432,
+    "host": "172.17.0.1",
+    "keepAlive": true,
+    "ssl": false
+  },
+  "server": {
+    "port": 3000,
+    "version": "0"
+  }
+}
